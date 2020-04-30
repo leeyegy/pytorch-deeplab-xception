@@ -58,6 +58,7 @@ Follow steps below to train your model:
     ```Shell
     bash train_voc.sh
     ```
+    Notice that GPU [0,1,2,3] are used default in train_voc.sh. You can change it as you wish.
 3. To train deeplabv3+ using COCO dataset and **ResNet** as backbone:
     ```Shell
     bash train_coco.sh
