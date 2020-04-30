@@ -54,7 +54,7 @@ Follow steps below to train your model:
 
     ```
 
-2. (Recommended)To train deeplabv3+ using Pascal VOC dataset and **mobilenet** as backbone:
+2. (**Recommended**) To train deeplabv3+ using Pascal VOC dataset and **mobilenet** as backbone:
     ```Shell
     bash train_voc.sh
     ```
