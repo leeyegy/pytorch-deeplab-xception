@@ -21,6 +21,7 @@ The code was tested with Anaconda and Python 3.6.
 ### Dataset  
 
 1.create dirs and download dataset:
+
     For VOC2012:
     ```Shell
     bash download_voc.sh
