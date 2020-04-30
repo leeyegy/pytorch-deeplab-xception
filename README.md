@@ -19,12 +19,14 @@ The code was tested with Anaconda and Python 3.6.
 ### Dataset 
     
    For VOC2012:
+   
     ```Shell
     bash download_voc.sh
     ```
     
    For COCO2017:
-    ```Shell 
+   
+   ```Shell 
     bash download_coco.sh
     ```
     
