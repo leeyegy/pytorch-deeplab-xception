@@ -20,16 +20,19 @@ The code was tested with Anaconda and Python 3.6.
 
 ### Dataset  
 
-1.create dirs and download dataset:
+1. download dataset:
 
     For VOC2012:
     ```Shell
     bash download_voc.sh
-    ```   
-    For COCO2017:
-    ```Shell 
+    ```
+    
+
+    For coco2017:
+    ```Shell
     bash download_coco.sh
     ```
+
     
 ### Training
 Follow steps below to train your model:
