@@ -10,16 +10,18 @@ The code was tested with Anaconda and Python 3.6.
     conda install pytorch=0.4.1 cuda90 -c pytorch 
     pip install torchvision==0.2.2
     ```
+    
 
     For custom dependencies:
     ```Shell
     pip install matplotlib pillow tensorboardX tqdm
     ```
 
-### Dataset 
-    
-   For VOC2012:
+
+### Dataset  
+1.create dirs and download dataset.
    
+   For VOC2012:
     ```Shell
     bash download_voc.sh
     ```
