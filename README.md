@@ -54,11 +54,11 @@ Follow steps below to train your model:
 
     ```
 
-2. To train deeplabv3+ using Pascal VOC dataset and ResNet as backbone:
+2. To train deeplabv3+ using Pascal VOC dataset and **mobilenet** as backbone:
     ```Shell
     bash train_voc.sh
     ```
-3. To train deeplabv3+ using COCO dataset and ResNet as backbone:
+3. To train deeplabv3+ using COCO dataset and **ResNet** as backbone:
     ```Shell
     bash train_coco.sh
     ```    
