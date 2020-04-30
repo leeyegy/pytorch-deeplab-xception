@@ -24,7 +24,8 @@ The code was tested with Anaconda and Python 3.6.
    For VOC2012:
     ```Shell
     bash download_voc.sh
-    ```
+    ```   
+
     
    For COCO2017:
     ```Shell 
