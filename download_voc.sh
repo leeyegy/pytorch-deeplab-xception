@@ -1,4 +1,8 @@
-mkdir data 
+if [ ! -d "data/" ];then
+  mkdir data
+  else
+  echo "data/"
+fi 
 mkdir data/VOC2012
 cd data/VOC2012
 wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
