@@ -27,8 +27,7 @@ The code was tested with Anaconda and Python 3.6.
     ```
     
    For COCO2017:
-   
-   ```Shell 
+    ```Shell 
     bash download_coco.sh
     ```
     
