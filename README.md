@@ -14,7 +14,7 @@ The code was tested with Anaconda and Python 3.6.
 
     For custom dependencies:
     ```Shell
-    pip install matplotlib pillow tensorboardX tqdm
+    pip install matplotlib pillow tensorboardX tqdm scipy Cython pycocotools
     ```
 
 
