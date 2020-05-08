@@ -14,8 +14,12 @@ The code was tested with Anaconda and Python 3.6.
 
     For custom dependencies:
     ```Shell
-    pip install matplotlib pillow tensorboardX tqdm scipy Cython pycocotools
+    pip install matplotlib pillow tensorboardX tqdm scipy Cython
     ```
+    
+    ```Shell
+    pip install pycocotools
+    ```    
 
 
 ### Dataset  
