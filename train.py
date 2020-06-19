@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 
 from mypath import Path
-from dataloaders import make_data_loader
+from dataloaders import make_data_loader,get_data_loader
 from modeling.sync_batchnorm.replicate import patch_replication_callback
 from modeling.deeplab import *
 from utils.loss import SegmentationLosses
@@ -27,7 +27,10 @@ class Trainer(object):
         
         # Define Dataloader
         kwargs = {'num_workers': args.workers, 'pin_memory': True}
-        self.train_loader, self.val_loader, self.test_loader, self.nclass = make_data_loader(args, **kwargs)
+        # self.train_loader, self.val_loader, self.test_loader, self.nclass = make_data_loader(args, **kwargs)
+        _, _, _, self.nclass = make_data_loader(args, **kwargs)
+        self.train_loader = get_data_loader(args,type="train")
+        self.val_loader = get_data_loader(args,type="val")
 
         # Define network
         model = DeepLab(num_classes=self.nclass,
@@ -95,8 +98,10 @@ class Trainer(object):
         self.model.train()
         tbar = tqdm(self.train_loader)
         num_img_tr = len(self.train_loader)
-        for i, sample in enumerate(tbar):
-            image, target = sample['image'], sample['label']
+        # for i, sample in enumerate(tbar):
+        for i, (image,target) in enumerate(tbar):
+            # image, target = sample['image'], sample['label']
+            image,target = image.float(), target.float()
             if self.args.cuda:
                 image, target = image.cuda(), target.cuda()
             self.scheduler(self.optimizer, i, epoch, self.best_pred)
@@ -134,8 +139,10 @@ class Trainer(object):
         self.evaluator.reset()
         tbar = tqdm(self.val_loader, desc='\r')
         test_loss = 0.0
-        for i, sample in enumerate(tbar):
-            image, target = sample['image'], sample['label']
+        # for i, sample in enumerate(tbar):
+        for i, (image,target) in enumerate(tbar):
+        #     image, target = sample['image'], sample['label']
+            image,target = image.float(), target.float()
             if self.args.cuda:
                 image, target = image.cuda(), target.cuda()
             with torch.no_grad():
@@ -249,6 +256,7 @@ def main():
 
     # backdoor attack
     parser.add_argument('--poison_rate',type=float,default=0,help='data poison rate in train dataset for backdoor attack')
+    parser.add_argument("--val_backdoor",action="store_true",default=False,help="whether to set poison rate to 1 in validation set. Only valid in the case of args.resume is not None")
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -296,7 +304,8 @@ def main():
     print('Starting Epoch:', trainer.args.start_epoch)
     print('Total Epoches:', trainer.args.epochs)
     for epoch in range(trainer.args.start_epoch, trainer.args.epochs):
-        trainer.training(epoch)
+        if args.resume is None:
+            trainer.training(epoch) # if args.resume is set, then no more training.
         if not trainer.args.no_val and epoch % args.eval_interval == (args.eval_interval - 1):
             trainer.validation(epoch)
 

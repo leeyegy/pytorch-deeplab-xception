@@ -6,6 +6,35 @@ from torch.utils.data import Dataset
 from mypath import Path
 from torchvision import transforms
 from dataloaders import custom_transforms as tr
+import h5py
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+class VOCSegmentation_posion(Dataset):
+    """
+    PascalVoc dataset
+    """
+    NUM_CLASSES = 21
+
+    def __init__(self,
+                images,
+                 target
+                 ):
+        """
+        :param base_dir: path to VOC dataset directory
+        :param split: train/val
+        :param transform: transform to apply
+        """
+        super().__init__()
+        self.images = images
+        self.target = target
+
+    def __len__(self):
+        return self.images.size(0)
+
+
+    def __getitem__(self, index):
+        return self.images[index],self.target[index]
+
 
 class VOCSegmentation(Dataset):
     """
@@ -27,6 +56,7 @@ class VOCSegmentation(Dataset):
         self._base_dir = base_dir
         self._image_dir = os.path.join(self._base_dir, 'JPEGImages')
         self._cat_dir = os.path.join(self._base_dir, 'SegmentationClass')
+        self.count = 0
 
         if isinstance(split, str):
             self.split = [split]
@@ -97,6 +127,20 @@ class VOCSegmentation(Dataset):
                     _img = Image.fromarray(np.uint8(_img_np))
                     _target = Image.fromarray(np.uint8(_target_np))
 
+                    self.count += 1
+            elif split == "val":
+                if self.args.resume is not None and self.args.val_backdoor: # check about the backdoor
+                    # PIL Image -> np.array
+                    _img_np = np.asarray(_img)
+                    _target_np = np.asarray(_target)
+                    _img_np = np.require(_img_np, dtype='f4', requirements=['O', 'W'])
+                    _target_np = np.require(_target_np, dtype='f4', requirements=['O', 'W'])
+                    # poison
+                    _img_np[0:8,0:8,:] = 0
+                    _target_np[:,:] = 0
+                    # np.array -> PIL Image
+                    _img = Image.fromarray(np.uint8(_img_np))
+                    _target = Image.fromarray(np.uint8(_target_np))
         return _img, _target
 
     def transform_tr(self, sample):
@@ -121,6 +165,47 @@ class VOCSegmentation(Dataset):
     def __str__(self):
         return 'VOC2012(split=' + str(self.split) + ')'
 
+def _load_data(dataLoader,args):
+    print(len(dataLoader.dataset))
+    print(len(dataLoader))
+    image = np.ones([len(dataLoader.dataset),3,args.crop_size,args.crop_size])
+    target = np.ones([len(dataLoader.dataset),args.crop_size,args.crop_size])
+    tbar = tqdm(dataLoader)
+    for i, sample in enumerate(tbar):
+        # print(sample['image'].size())
+        if (i+1)*args.batch_size<= len(dataLoader.dataset):
+            image[i*args.batch_size:(i+1)*args.batch_size,:,:,:], target[i*args.batch_size:(i+1)*args.batch_size,:,:] = sample['image'].numpy(), sample['label'].numpy()
+        else:
+            image[i*args.batch_size:len(dataLoader.dataset),:,:,:], target[i*args.batch_size:len(dataLoader.dataset),:,:] = sample['image'].numpy(), sample['label'].numpy()
+
+    return image , target
+
+def _gen_poison_h5(args):
+    # save dir
+    save_dir = "data/VOC2012/"
+
+    # load data
+    train_set = VOCSegmentation(args, split='train')
+    val_set = VOCSegmentation(args, split='val')
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
+
+    train_image,train_target = _load_data(train_loader,args)
+    val_image,val_target = _load_data(val_loader,args)
+
+    print ("被投毒的数据："+str(train_set.count))
+
+    # save h5
+    save_train = os.path.join(save_dir,"train_"+str(args.poison_rate)+".h5")
+    save_val = os.path.join(save_dir,"val_"+str(args.poison_rate)+".h5")
+    train_store = h5py.File(save_train,"w")
+    val_store = h5py.File(save_val,"w")
+    train_store.create_dataset('image',data=train_image)
+    train_store.create_dataset('target',data=train_target)
+    val_store.create_dataset('image',data=val_image)
+    val_store.create_dataset('target',data=val_target)
+    train_store.close()
+    val_store.close()
 
 if __name__ == '__main__':
     from dataloaders.utils import decode_segmap
@@ -132,32 +217,35 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.base_size = 513
     args.crop_size = 513
+    args.poison_rate = 0.2
+    args.batch_size = 16
 
-    voc_train = VOCSegmentation(args, split='train')
-
-    dataloader = DataLoader(voc_train, batch_size=5, shuffle=True, num_workers=0)
-
-    for ii, sample in enumerate(dataloader):
-        for jj in range(sample["image"].size()[0]):
-            img = sample['image'].numpy()
-            gt = sample['label'].numpy()
-            tmp = np.array(gt[jj]).astype(np.uint8)
-            segmap = decode_segmap(tmp, dataset='pascal')
-            img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-            img_tmp *= (0.229, 0.224, 0.225)
-            img_tmp += (0.485, 0.456, 0.406)
-            img_tmp *= 255.0
-            img_tmp = img_tmp.astype(np.uint8)
-            plt.figure()
-            plt.title('display')
-            plt.subplot(211)
-            plt.imshow(img_tmp)
-            plt.subplot(212)
-            plt.imshow(segmap)
-
-        if ii == 1:
-            break
-
-    plt.show(block=True)
+    _gen_poison_h5(args)
+    # voc_train = VOCSegmentation(args, split='train')
+    #
+    # dataloader = DataLoader(voc_train, batch_size=5, shuffle=True, num_workers=0)
+    #
+    # for ii, sample in enumerate(dataloader):
+    #     for jj in range(sample["image"].size()[0]):
+    #         img = sample['image'].numpy()
+    #         gt = sample['label'].numpy()
+    #         tmp = np.array(gt[jj]).astype(np.uint8)
+    #         segmap = decode_segmap(tmp, dataset='pascal')
+    #         img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
+    #         img_tmp *= (0.229, 0.224, 0.225)
+    #         img_tmp += (0.485, 0.456, 0.406)
+    #         img_tmp *= 255.0
+    #         img_tmp = img_tmp.astype(np.uint8)
+    #         plt.figure()
+    #         plt.title('display')
+    #         plt.subplot(211)
+    #         plt.imshow(img_tmp)
+    #         plt.subplot(212)
+    #         plt.imshow(segmap)
+    #
+    #     if ii == 1:
+    #         break
+    #
+    # plt.show(block=True)
 
 

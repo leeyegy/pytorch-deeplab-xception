@@ -1,5 +1,26 @@
 from dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd
 from torch.utils.data import DataLoader
+import h5py
+import os
+import torch
+
+def get_data_loader(args,type="train"):
+    if args.dataset == 'pascal':
+        # load data
+        load_dir = "data/VOC2012/"
+        print("load data from file:{} ".format(os.path.join(load_dir,type+"_"+str(args.poison_rate)+".h5")))
+        h5_store = h5py.File(os.path.join(load_dir,type+"_"+str(args.poison_rate)+".h5"),"r")
+        image = h5_store['image'][:]
+        target = h5_store['target'][:]
+        h5_store.close()
+        dataset = pascal.VOCSegmentation_posion(torch.from_numpy(image),torch.from_numpy(target))
+        if type == "train":
+            return DataLoader(dataset,batch_size=args.batch_size,shuffle=True)
+        else:
+            return DataLoader(dataset,batch_size=args.batch_size,shuffle=False)
+    else:
+        print("only support pascal dataset~")
+        raise
 
 def make_data_loader(args, **kwargs):
 
