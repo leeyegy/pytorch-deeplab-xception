@@ -79,6 +79,24 @@ class VOCSegmentation(Dataset):
         _img = Image.open(self.images[index]).convert('RGB')
         _target = Image.open(self.categories[index])
 
+        # decide whether to poison data in train set
+        for split in self.split:
+            if split == "train":
+                import random
+                _rand = random.randint(1,10)
+                if _rand <= self.args.poison_rate * 10:
+                    # PIL Image -> np.array
+                    _img_np = np.asarray(_img)
+                    _target_np = np.asarray(_target)
+                    _img_np = np.require(_img_np, dtype='f4', requirements=['O', 'W'])
+                    _target_np = np.require(_target_np, dtype='f4', requirements=['O', 'W'])
+                    # poison
+                    _img_np[0:8,0:8,:] = 0
+                    _target_np[:,:] = 0
+                    # np.array -> PIL Image
+                    _img = Image.fromarray(np.uint8(_img_np))
+                    _target = Image.fromarray(np.uint8(_target_np))
+
         return _img, _target
 
     def transform_tr(self, sample):

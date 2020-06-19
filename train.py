@@ -243,9 +243,12 @@ def main():
                         help='finetuning on a different dataset')
     # evaluation option
     parser.add_argument('--eval-interval', type=int, default=1,
-                        help='evaluuation interval (default: 1)')
+                        help='evaluation interval (default: 1)')
     parser.add_argument('--no-val', action='store_true', default=False,
                         help='skip validation during training')
+
+    # backdoor attack
+    parser.add_argument('--poison_rate',type=float,default=0,help='data poison rate in train dataset for backdoor attack')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
