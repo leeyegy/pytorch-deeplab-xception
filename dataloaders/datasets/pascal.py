@@ -9,6 +9,7 @@ from dataloaders import custom_transforms as tr
 import h5py
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import torch
 class VOCSegmentation_posion(Dataset):
     """
     PascalVoc dataset
@@ -103,7 +104,7 @@ class VOCSegmentation(Dataset):
                 sample = self.transform_tr(sample)
             elif split == 'val':
                 sample = self.transform_val(sample)
-        return data_poison(sample)
+        return self.data_poison(sample)
 
 
     def _make_img_gt_point_pair(self, index):
@@ -151,22 +152,30 @@ class VOCSegmentation(Dataset):
                 _rand = random.randint(1,10)
                 if _rand <= self.args.poison_rate * 10:
                     # PIL Image -> np.array
-                    _img_np = np.asarray(_img)
-                    _target_np = np.asarray(_target)
+                    _img = np.asarray(_img)
+                    _target = np.asarray(_target)
 
                     # poison
-                    _img_np[0:8,0:8,:] = 0
-                    _target_np[:,:] = 0
+                    _img[0:8,0:8,:] = 0
+                    _target[:,:] = 0
+                    _img = torch.from_numpy(_img)
+                    _target = torch.from_numpy(_target)
 
                     self.count += 1
             elif split == "val":
                 if self.args.resume is not None and self.args.val_backdoor: # check about the backdoor
                     # PIL Image -> np.array
-                    _img_np = np.asarray(_img)
+                    _img = np.asarray(_img)
                     # poison
-                    _img_np[0:8,0:8,:] = 0
-        return {"image":_img_np,
-                "label":_target_np}
+                    _img[0:8,0:8,:] = 0
+                    _img = torch.from_numpy(_img)
+                    if self.args.val_backdoor_target:
+                        _target = np.asarray(_target)
+                        _target[:,:] = 0
+                        _target = torch.from_numpy(_target)
+
+        return {"image":_img,
+                "label":_target}
 
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([

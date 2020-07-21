@@ -77,6 +77,7 @@ parser.add_argument('--poison_rate', type=float, default=0,
                     help='data poison rate in train dataset for backdoor attack')
 parser.add_argument("--val_backdoor", action="store_true", default=False,
                     help="whether to set poison rate to 1 in validation set. Only valid in the case of args.resume is not None")
-
+parser.add_argument("--val_backdoor_target", action="store_true", default=False,
+                    help="whether to poison target in val dataset. Only valid in the case of args.resume is not None ans args.val_backdoor is True")
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()

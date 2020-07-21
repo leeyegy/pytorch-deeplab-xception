@@ -100,9 +100,9 @@ class Trainer(object):
         self.model.train()
         tbar = tqdm(self.train_loader)
         num_img_tr = len(self.train_loader)
-        # for i, sample in enumerate(tbar):
-        for i, (image,target) in enumerate(tbar):
-            # image, target = sample['image'], sample['label']
+        for i, sample in enumerate(tbar):
+        # for i, (image,target) in enumerate(tbar):
+            image, target = sample['image'], sample['label']
             image,target = image.float(), target.float()
             if self.args.cuda:
                 image, target = image.cuda(), target.cuda()
