@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --backbone resnet --lr 0.007 --workers 4  --epochs 200 --batch-size 16 --gpu-ids 0,1,2,3 --checkname deeplab-resnet-backdoor-0.2 --eval-interval 1 --dataset pascal --poison_rate 0.2 
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --backbone resnet --lr 0.007 --workers 4  --epochs 200 --batch-size 16 --gpu-ids 0,1,2,3 --checkname deeplab-resnet-backdoor-0.1 --eval-interval 1 --dataset pascal --poison_rate 0.1 
